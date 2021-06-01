@@ -10,7 +10,7 @@ namespace CasinoRoll
     [BepInProcess("valheim.exe")]
     public class CasinoRoll : BaseUnityPlugin
     {
-        public const string Version = "0.1";
+        public const string Version = "0.2";
         public const string ModName = "Casino Roll";
         private Harmony _harmony;
 
@@ -39,18 +39,19 @@ namespace CasinoRoll
         [HarmonyPatch(typeof(Chat), "Roll")]
         private static class ChatPatch
         {
+            private static readonly Random rnd = new Random(Guid.NewGuid().GetHashCode());
+
             [HarmonyPostfix]
             [HarmonyPatch(nameof(Chat.InputText))]
             private static void InputText_Patch(ref Chat __instance)
             {
-                Random rnd = new Random(Guid.NewGuid().GetHashCode());
-                string text = __instance.m_input.text;
-                Talker.Type type = Talker.Type.Normal;
-
                 if (!isModEnabled.Value)
                 {
                     return;
                 }
+
+                string text = __instance.m_input.text;
+                Talker.Type type = Talker.Type.Normal;
 
                 if (text == "/roll")
                 {
