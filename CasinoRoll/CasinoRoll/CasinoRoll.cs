@@ -10,7 +10,7 @@ namespace CasinoRoll
     [BepInProcess("valheim.exe")]
     public class CasinoRoll : BaseUnityPlugin
     {
-        public const string Version = "0.3";
+        public const string Version = "0.4";
         public const string ModName = "Casino Roll";
         private Harmony _harmony;
 
@@ -18,19 +18,25 @@ namespace CasinoRoll
         private static ConfigEntry<bool> isModEnabled;
         private static ConfigEntry<string> rollAnnouncement;
         private static ConfigEntry<bool> isRollAnnouncementEnabled;
-        private static ConfigEntry<string> rules;
-        private static ConfigEntry<bool> isRulesEnabled;
+        private static ConfigEntry<string> rollRules;
+        private static ConfigEntry<string> rouletteAnnouncement;
+        private static ConfigEntry<bool> isRouletteAnnouncementEnabled;
+        private static ConfigEntry<string> rouletteRules;
         private static ConfigEntry<bool> isShowCommandEnabled;
 
         void Awake()
         {
-            isModEnabled = Config.Bind<bool>("1. General", "Enable Mod", true, "Enable mod -  on /roll, posts announcements in chat and rolls the dice with a random number between 1 and 100");
+            isModEnabled = Config.Bind<bool>("1. General", "Enable Mod", true, "Enable mod -  on /roll and /roll2, posts announcements in chat and rolls the dice with a random number between 1 and 100, or 0 and 36");
             isRollAnnouncementEnabled = Config.Bind<bool>("1. General", "Enable /roll announcement", true, "Sets whether the announcement on /roll is typed");
-            isRulesEnabled = Config.Bind<bool>("1. General", "Enable /rollrules announcement", true, "Sets whether the announcement on /rollrules is typed");
+            isRouletteAnnouncementEnabled = Config.Bind<bool>("1. General", "Enable /roll2 announcement", true, "Sets whether the announcement on /roll2 is typed");
+
             isShowCommandEnabled = Config.Bind<bool>("1. General", "Enable commands", true, "Sets whether the /roll or /rollrules commands are typed in chat");
 
             rollAnnouncement = Config.Bind<string>("2. Announcement", "Roll announcement", "This will be the first line of announcements", "The announcement to be typed when you /roll");
-            rules = Config.Bind<string>("3. Rules", "Rules", "These are the rules", "Details the rules posted upon /rollrulles");
+            rollRules = Config.Bind<string>("3. Rules", "Roll Rules", "These are the rules", "Details the rules posted upon /rollrules");
+
+            rouletteAnnouncement = Config.Bind<string>("2. Announcement", "Roulette announcement", "This will be the first line of announcements", "The announcement to be typed when you /roll2");
+            rouletteRules = Config.Bind<string>("3. Rules", "Roulette Rules", "These are the rules", "Details the rules posted upon /roll2rules");
 
             _harmony = Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
         }
@@ -83,13 +89,36 @@ namespace CasinoRoll
                     {
                         __instance.SendText(type, text);
                     }
-                    if (isRulesEnabled.Value)
-                    {
-                        __instance.SendText(type, rules.Value);
-                    }
+                    __instance.SendText(type, rollRules.Value);
                     Player.m_localPlayer.StartEmote("challenge");
                     runOriginalMethod = false;
-                } else
+                }
+                else if (text == "/roll2")
+                {
+                    if (isShowCommandEnabled.Value)
+                    {
+                        __instance.SendText(type, "/roulette");
+                    }
+                    if (isRouletteAnnouncementEnabled.Value)
+                    {
+                        __instance.SendText(type, rouletteAnnouncement.Value);
+                    }
+                    Player.m_localPlayer.StartEmote("cheer");
+
+                    __instance.SendText(type, Convert.ToString(rnd.Next(0, 37)));
+                    runOriginalMethod = false;
+                }
+                else if (text == "/roll2rules")
+                {
+                    if (isShowCommandEnabled.Value)
+                    {
+                        __instance.SendText(type, "/rouletteRules");
+                    }
+                    __instance.SendText(type, rouletteRules.Value);
+                    Player.m_localPlayer.StartEmote("challenge");
+                    runOriginalMethod = false;
+                }
+                 else
                 {
                     runOriginalMethod = true;
                 }
